@@ -1,21 +1,8 @@
-    import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-useEffect(() => {
-  axios.get("http://localhost:8000/api/transfers/", { withCredentials: true })
-    .then((res) => setTransfers(res.data));
-});
-
-const handleTransfer = () => {
-  axios.post("http://localhost:8000/api/transfers/", {
-    fromBase, toBase, item, quantity, date,
-  }, { withCredentials: true })
-  .then(() => alert("Transfer successful"))
-  .catch((err) => console.error(err));
-};
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Input } from "../components/ui/input";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const Transfer = () => {
   const [fromBase, setFromBase] = useState("");
@@ -24,10 +11,27 @@ const Transfer = () => {
   const [date, setDate] = useState("");
   const [history, setHistory] = useState([]);
 
+  // Fetch transfer history
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/transfers/", { withCredentials: true })
+      .then((res) => setHistory(res.data))
+      .catch((err) => console.error("Fetch Error:", err));
+  }, []);
+
+  // Submit new transfer
   const handleTransfer = () => {
-    const record = { fromBase, toBase, equipment, date };
-    setHistory([...history, record]);
-    setFromBase(""); setToBase(""); setEquipment(""); setDate("");
+    axios.post("http://localhost:8000/api/transfers/", {
+      fromBase,
+      toBase,
+      equipment,
+      date,
+    }, { withCredentials: true })
+    .then(() => {
+      alert("Transfer successful");
+      setHistory([...history, { fromBase, toBase, equipment, date }]);
+      setFromBase(""); setToBase(""); setEquipment(""); setDate("");
+    })
+    .catch((err) => console.error("Submit Error:", err));
   };
 
   return (
@@ -40,6 +44,7 @@ const Transfer = () => {
         <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
       </div>
       <Button className="mt-4" onClick={handleTransfer}>Transfer</Button>
+
       <h3 className="text-lg font-semibold mt-6 mb-2">Transfer History</h3>
       <div className="grid gap-2">
         {history.map((item, i) => (

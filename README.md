@@ -18,25 +18,29 @@ A full-stack web application to manage and track military assets (vehicles, weap
 
 ## 📂 Project Structure
 
-```
 military-asset-management/
-├── backend/                        
+├── backend/                        # Django backend
 │   ├── manage.py
-│   ├── military_assets/           
-│   ├── assets/                    
-│   ├── users/                     
+│   ├── military_assets/
+│   ├── assets/
+│   ├── users/
 │   └── requirements.txt
 │
-├── frontend/                      
-│   ├── components/
-│   ├── context/
-│   ├── pages/
-│   ├── styles/
-│   ├── utils/
-│   └── package.json
+├── frontend/                       # Vite-based React frontend
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   ├── public/
+│   └── src/
+│       ├── components/
+│       ├── context/
+│       ├── pages/
+│       ├── utils/
+│       ├── App.jsx
+│       └── main.jsx
 │
-├── docker-compose.yml            
-├── .env                          
+├── docker-compose.yml
+├── .env
 └── README.md
 ```
 
@@ -60,6 +64,7 @@ cd military-asset-management
 
 cd backend
 python -m venv venv
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 .\venv\Scripts\Activate.ps1  
 pip install -r requirements.txt
 

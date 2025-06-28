@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'military_assets.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'kristalball',
+        'NAME': 'military_assets',
         'USER': 'root',
         'PASSWORD': 'root',
         'HOST': 'localhost',   

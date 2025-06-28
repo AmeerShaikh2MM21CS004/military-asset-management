@@ -18,20 +18,27 @@ A full-stack web application to manage and track military assets (vehicles, weap
 
 ## 📂 Project Structure
 
+```
 military-asset-management/
-├── backend/ # Django + DRF
-│ ├── military_assets/ # Project config
-│ ├── assets/ # Models: Asset, Purchase, Transfer, etc.
-│ ├── users/ # Roles and authentication
-│ └── requirements.txt
+├── backend/                        
+│   ├── manage.py
+│   ├── military_assets/           
+│   ├── assets/                    
+│   ├── users/                     
+│   └── requirements.txt
 │
-├── frontend/ # React + Next.js
-│ ├── pages/ # Dashboard, Login, Transfers, etc.
-│ ├── components/ # Reusable UI
-│ └── utils/api.js
-
-
----
+├── frontend/                      
+│   ├── components/
+│   ├── context/
+│   ├── pages/
+│   ├── styles/
+│   ├── utils/
+│   └── package.json
+│
+├── docker-compose.yml            
+├── .env                          
+└── README.md
+```
 
 ## 🖼️ Screenshots
 

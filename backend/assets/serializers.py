@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Base, EquipmentType, Asset, Transfer, Assignment, Expenditure
+from .models import Base, EquipmentType, Asset, Transfer, Assignment, Expenditure, Purchase
 
 class BaseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,9 +17,13 @@ class AssetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TransferSerializer(serializers.ModelSerializer):
+    from_base = serializers.StringRelatedField()
+    to_base = serializers.StringRelatedField()
+
     class Meta:
         model = Transfer
         fields = '__all__'
+
 
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,4 +33,9 @@ class AssignmentSerializer(serializers.ModelSerializer):
 class ExpenditureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expenditure
+        fields = '__all__'
+
+class PurchaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Purchase
         fields = '__all__'

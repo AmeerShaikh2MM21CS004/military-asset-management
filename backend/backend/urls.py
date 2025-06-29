@@ -16,9 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from assets.views import dashboard_metrics
+from assets.views import net_movement_details
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('assets.urls')), 
+    path('api/dashboard/', dashboard_metrics),
+    path('api/net-movement-details/', net_movement_details),  
+    path('api/', include('assets.urls')),
 ]
+
+
 

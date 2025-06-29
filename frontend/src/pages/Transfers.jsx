@@ -36,7 +36,7 @@ const Transfer = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Transfer Asset</h2>
+      <h2 className="text-lg font-semibold mt-6 mb-2 text-gray-800">Transfer Asset</h2>
       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
         <Input placeholder="From Base" value={fromBase} onChange={e => setFromBase(e.target.value)} />
         <Input placeholder="To Base" value={toBase} onChange={e => setToBase(e.target.value)} />

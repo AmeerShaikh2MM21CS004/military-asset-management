@@ -5,14 +5,17 @@ const Navbar = () => {
   const location = useLocation();
 
   const linkClass = (path) =>
-    `px-4 py-2 rounded-md hover:bg-gray-200 transition ${
-      location.pathname === path ? "bg-gray-300 font-semibold" : ""
+    `px-4 py-2 rounded-md transition ${
+      location.pathname === path
+        ? "bg-blue-600 text-white font-semibold"
+        : "text-gray-800 hover:bg-blue-100"
     }`;
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center space-x-6">
+    <nav className="bg-gray-100 shadow-sm border-b border-gray-200">
+      <div className="w-full px-4">
+        <div className="flex h-14 items-center justify-start gap-4">
+          {/* Navigation links aligned to the left */}
           <Link to="/Dashboard" className={linkClass("/Dashboard")}>
             Dashboard
           </Link>

@@ -3,6 +3,11 @@ import axios from "axios";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "../components/ui/dialog";
 
 const Purchases = () => {
   const [base, setBase] = useState("");
@@ -10,50 +15,204 @@ const Purchases = () => {
   const [date, setDate] = useState("");
   const [quantity, setQuantity] = useState("");
   const [history, setHistory] = useState([]);
+  const [bases, setBases] = useState([]);
+  const [equipmentTypes, setEquipmentTypes] = useState([]);
+  const [dialogType, setDialogType] = useState(""); // "success" or "error"
+  const [open, setOpen] = useState(false); // Dialog state
+  const [filterBase, setFilterBase] = useState("");
+  const [filterEquipmentType, setFilterEquipmentType] = useState("");
+  const [filterDate, setFilterDate] = useState("");
 
-  // Fetch purchase history
+  // Fetch dropdown options
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/purchases/", { withCredentials: true })
-      .then((res) => setHistory(res.data))
-      .catch((err) => console.error("Fetch Error:", err));
+      .get("http://localhost:8000/api/bases/", { withCredentials: true })
+      .then((res) => setBases(res.data))
+      .catch(console.error);
+
+    axios
+      .get("http://localhost:8000/api/equipment-types/", {
+        withCredentials: true,
+      })
+      .then((res) => setEquipmentTypes(res.data))
+      .catch(console.error);
   }, []);
 
-  // Submit new purchase
+  // Fetch purchase history
+const fetchHistory = () => {
+  console.log("Fetching with filters:", { filterBase, filterEquipmentType, filterDate });
+
+  axios
+    .get("http://localhost:8000/api/purchases/", {
+      params: {
+        base: filterBase || undefined,
+        equipment_type: filterEquipmentType || undefined,
+        date: filterDate || undefined,
+      },
+      withCredentials: true,
+    })
+    .then((res) => {
+      console.log("Filtered results:", res.data);
+      setHistory(res.data);
+    })
+    .catch((err) => {
+      console.error("Filter error:", err);
+    });
+};
+
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  // Handle form submission
   const handleSubmit = () => {
     axios
       .post(
         "http://localhost:8000/api/purchases/",
-        { base, equipmentType, date, quantity },
+        {
+          base,
+          equipment_type: equipmentType,
+          date,
+          quantity,
+        },
         { withCredentials: true }
       )
       .then(() => {
-        alert("Purchase saved");
-        setHistory([...history, { base, equipmentType, date, quantity }]); // Append to history
+        setDialogType("success");
+        fetchHistory();
         setBase("");
         setEquipmentType("");
         setDate("");
         setQuantity("");
+        setOpen(true);
       })
-      .catch((err) => console.error("Submit Error:", err));
+      .catch(() => {
+        setDialogType("error");
+        setOpen(true);
+      });
   };
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Record Purchase</h2>
-      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
-        <Input placeholder="Base" value={base} onChange={(e) => setBase(e.target.value)} />
-        <Input placeholder="Equipment Type" value={equipmentType} onChange={(e) => setEquipmentType(e.target.value)} />
-        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        <Input type="number" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-      </div>
-      <Button className="mt-4" onClick={handleSubmit}>Add Purchase</Button>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Record Purchase</h2>
 
-      <h3 className="text-lg font-semibold mt-6 mb-2">Purchase History</h3>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <select
+          value={base}
+          onChange={(e) => setBase(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">Select Base</option>
+          {bases.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={equipmentType}
+          onChange={(e) => setEquipmentType(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">Select Equipment</option>
+          {equipmentTypes.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
+          ))}
+        </select>
+
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <Input
+          type="number"
+          placeholder="Quantity"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+        />
+      </div>
+
+      <Button className="mt-4" onClick={handleSubmit}>
+        Add Purchase
+      </Button>
+
+      {/* Dialog for Success/Error Message */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          {dialogType === "success" ? (
+            <>
+              <DialogTitle>✅ Purchase Recorded</DialogTitle>
+              <p className="mt-2 text-gray-700">
+                Your purchase has been saved successfully.
+              </p>
+            </>
+          ) : dialogType === "error" ? (
+            <>
+              <DialogTitle className="text-red-600">❌ Error</DialogTitle>
+              <p className="mt-2 text-red-600">
+                Something went wrong. Please try again.
+              </p>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <hr className="my-6" />
+
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">
+        Purchase History
+      </h3>
+
+      <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-4 mb-4">
+        <select
+          value={filterBase}
+          onChange={(e) => setFilterBase(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">Filter by Base</option>
+          {bases.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterEquipmentType}
+          onChange={(e) => setFilterEquipmentType(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">Filter by Type</option>
+          {equipmentTypes.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
+          ))}
+        </select>
+
+        <Input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+        />
+        <Button type="button" onClick={fetchHistory}>Apply Filters</Button>
+      </div>
+
       <div className="grid gap-2">
         {history.map((item, i) => (
-          <Card key={i} className="p-2">
-            {item.date} | {item.base} | {item.equipmentType} | Qty: {item.quantity}
+          <Card
+            key={i}
+            className="p-3 text-sm bg-gray-100 !text-black shadow rounded"
+          >
+            {item.date} | Base:{" "}
+            {bases.find((b) => b.id === item.base)?.name || "N/A"} | Equipment:{" "}
+            {equipmentTypes.find((t) => t.id === item.equipment_type)?.name || "N/A"} | Qty:{" "}
+            {item.quantity}
           </Card>
         ))}
       </div>

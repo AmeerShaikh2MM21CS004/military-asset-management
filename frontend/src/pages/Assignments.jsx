@@ -34,7 +34,7 @@ const Assignments = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Assignments & Expenditures</h2>
+      <h2 className="text-lg font-semibold mt-6 mb-2 text-gray-800">Assignments & Expenditures</h2>
       <div className="grid gap-2 md:grid-cols-3">
         <Input placeholder="Personnel Name" value={personnel} onChange={e => setPersonnel(e.target.value)} />
         <Input placeholder="Assigned Asset" value={asset} onChange={e => setAsset(e.target.value)} />

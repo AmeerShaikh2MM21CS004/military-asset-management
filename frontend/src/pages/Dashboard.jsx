@@ -15,7 +15,6 @@ const Dashboard = () => {
   const [bases, setBases] = useState([]);
   const [equipmentTypes, setEquipmentTypes] = useState([]);
 
-  // Fetch base and equipment type for dropdowns
   useEffect(() => {
     axios.get("http://localhost:8000/api/bases/", { withCredentials: true })
       .then((res) => setBases(res.data))
@@ -26,7 +25,6 @@ const Dashboard = () => {
       .catch(console.error);
   }, []);
 
-  // Fetch dashboard metrics
   const fetchMetrics = () => {
     axios.get("http://localhost:8000/api/dashboard/", {
       params: filters,
@@ -70,7 +68,6 @@ const Dashboard = () => {
       <div className="max-w-screen-2xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
 
-        {/* Filters */}
         <div className="bg-white p-6 rounded-xl shadow-md mb-10">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">Filter Metrics</h3>
           <div className="flex flex-wrap gap-4 items-center">
@@ -78,31 +75,28 @@ const Dashboard = () => {
               type="date"
               value={filters.date}
               onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-              className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
+              className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             />
-
             <select
               value={filters.base}
               onChange={(e) => setFilters({ ...filters, base: e.target.value })}
-              className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
+              className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             >
               <option value="">Select Base</option>
               {bases.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
-
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
+              className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             >
               <option value="">Select Equipment Type</option>
               {equipmentTypes.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
-
             <button
               onClick={fetchMetrics}
               className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
@@ -112,7 +106,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {Object.entries({
             "Opening Balance": data.opening_balance,
@@ -133,12 +126,10 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Net Movement Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogTrigger asChild></DialogTrigger>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogTitle>Net Movement Details</DialogTitle>
-
           {movementDetails ? (
             <>
               <div className="mt-4">
@@ -149,7 +140,6 @@ const Dashboard = () => {
                   ))}
                 </ul>
               </div>
-
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2 text-green-700">Transfer In</h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
@@ -158,7 +148,6 @@ const Dashboard = () => {
                   ))}
                 </ul>
               </div>
-
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2 text-red-700">Transfer Out</h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">

@@ -8,7 +8,6 @@ const Transfer = () => {
   const [fromBase, setFromBase] = useState("");
   const [toBase, setToBase] = useState("");
   const [equipmentTypeId, setEquipmentTypeId] = useState("");
-  const [assetId, setAssetId] = useState("");
   const [date, setDate] = useState("");
   const [history, setHistory] = useState([]);
   const [assets, setAssets] = useState([]);
@@ -27,67 +26,57 @@ const Transfer = () => {
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/assets/", { withCredentials: true })
-      .then(res => setAssets(res.data))
+      .then(res => {
+        console.log("Loaded assets from backend:", res.data);
+        setAssets(res.data);
+      })
       .catch(err => console.error("Asset fetch error:", err));
 
     axios.get("http://localhost:8000/api/bases/", { withCredentials: true })
       .then(res => setBases(res.data))
-      .catch(err => console.error("Base fetch error:", err));
+      .catch(console.error);
 
     axios.get("http://localhost:8000/api/equipment-types/", { withCredentials: true })
       .then(res => setEquipmentTypes(res.data))
-      .catch(err => console.error("Type fetch error:", err));
+      .catch(console.error);
 
     fetchTransfers();
   }, []);
 
   useEffect(() => {
     if (fromBase && equipmentTypeId) {
-      const filtered = assets.filter(a => {
-        const baseId = typeof a.base === "object" ? a.base.id : a.base;
-        const typeId = typeof a.equipment_type === "object" ? a.equipment_type.id : a.equipment_type;
-        return String(baseId) === fromBase && String(typeId) === equipmentTypeId;
-      });
-
+      const filtered = assets.filter(a =>
+        String(a.base) === fromBase && String(a.equipment_type) === equipmentTypeId
+      );
       console.log("Filtered assets:", filtered);
       setAvailableAssets(filtered);
-      setAssetId(filtered.length > 0 ? String(filtered[0].id) : "");
     } else {
       setAvailableAssets([]);
-      setAssetId("");
     }
   }, [fromBase, equipmentTypeId, assets]);
 
   const handleTransfer = () => {
-    if (!fromBase || !toBase || !assetId || !date) {
-      alert("All fields are required.");
-      console.log("Missing fields:", { fromBase, toBase, assetId, date });
-      return;
+    if (!fromBase || !toBase || !equipmentTypeId || !date) {
+      return alert("All fields are required.");
+    }
+    if (availableAssets.length === 0) {
+      return alert("No matching asset to transfer.");
     }
 
-    const payload = {
+    const asset = availableAssets[0];
+    axios.post("http://localhost:8000/api/transfers/", {
       from_base: parseInt(fromBase),
       to_base: parseInt(toBase),
-      asset: parseInt(assetId),
+      asset: asset.id,
       date,
-      quantity: 1,
-    };
-
-    console.log("Submitting transfer payload:", payload);
-
-    axios.post("http://localhost:8000/api/transfers/", payload, { withCredentials: true })
+      quantity: 1
+    }, { withCredentials: true })
       .then(() => {
-        alert("Transfer successful");
+        alert("Transferred!");
         fetchTransfers();
-        setFromBase("");
-        setToBase("");
-        setEquipmentTypeId("");
-        setAssetId("");
-        setDate("");
-        setAvailableAssets([]);
       })
       .catch(err => {
-        console.error("Transfer error:", err.response?.data || err.message);
+        console.error(err);
         alert("Transfer failed.");
       });
   };
@@ -97,33 +86,21 @@ const Transfer = () => {
       <h2 className="text-lg font-semibold mt-6 mb-2 text-gray-800">Transfer Equipment</h2>
 
       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
-        <select
-          value={fromBase}
-          onChange={(e) => setFromBase(e.target.value)}
-          className="border px-4 py-2 rounded bg-white text-black"
-        >
+        <select value={fromBase} onChange={(e) => setFromBase(e.target.value)} className="border px-4 py-2 rounded bg-white text-black">
           <option value="">From Base</option>
           {bases.map((b) => (
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
 
-        <select
-          value={toBase}
-          onChange={(e) => setToBase(e.target.value)}
-          className="border px-4 py-2 rounded bg-white text-black"
-        >
+        <select value={toBase} onChange={(e) => setToBase(e.target.value)} className="border px-4 py-2 rounded bg-white text-black">
           <option value="">To Base</option>
           {bases.map((b) => (
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
 
-        <select
-          value={equipmentTypeId}
-          onChange={(e) => setEquipmentTypeId(e.target.value)}
-          className="border px-4 py-2 rounded bg-white text-black"
-        >
+        <select value={equipmentTypeId} onChange={(e) => setEquipmentTypeId(e.target.value)} className="border px-4 py-2 rounded bg-white text-black">
           <option value="">Select Equipment Type</option>
           {equipmentTypes.map((e) => (
             <option key={e.id} value={e.id}>{e.name}</option>
@@ -141,7 +118,7 @@ const Transfer = () => {
       <Button
         className="mt-4"
         onClick={handleTransfer}
-        disabled={!fromBase || !toBase || !equipmentTypeId || !date || !assetId}
+        disabled={!fromBase || !toBase || !equipmentTypeId || !date || availableAssets.length === 0}
       >
         Transfer
       </Button>
@@ -152,22 +129,23 @@ const Transfer = () => {
           <p className="text-gray-600">No transfers yet.</p>
         ) : (
           history.map((item, i) => {
-            const asset = typeof item.asset === 'object' ? item.asset : assets.find(a => a.id === item.asset);
-            const from = typeof item.from_base === 'object' ? item.from_base : bases.find(b => b.id === item.from_base);
-            const to = typeof item.to_base === 'object' ? item.to_base : bases.find(b => b.id === item.to_base);
+            const asset = assets.find(a => a.id === item.asset);
+            const from = bases.find(b => b.id === item.from_base);
+            const to = bases.find(b => b.id === item.to_base);
+            const type = equipmentTypes.find(e => e.id === asset?.equipment_type);
 
             return (
               <Card key={i} className="p-2 bg-gray-100 text-black shadow rounded">
                 {item.date} | From: {from?.name || 'N/A'} ➡ To: {to?.name || 'N/A'} | 
-                Equipment: {equipmentTypes.find(e => e.id === asset?.equipment_type)?.name || 'Unknown'} | 
-                Asset: {asset?.name || `ID: ${item.asset}`} | Qty: {item.quantity}
+                Equipment: {type?.name || 'Unknown'} | Asset: {asset?.name || `ID: ${item.asset}`} | Qty: {item.quantity}
               </Card>
             );
           })
-        )}
+        )}  
       </div>
     </div>
   );
 };
 
 export default Transfer;
+  

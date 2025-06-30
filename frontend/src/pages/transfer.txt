@@ -16,40 +16,47 @@ const Transfer = () => {
   const [equipmentTypes, setEquipmentTypes] = useState([]);
   const [availableAssets, setAvailableAssets] = useState([]);
 
-  const fetchTransfers = () => {
-    axios.get("http://localhost:8000/api/transfers/", { withCredentials: true })
-      .then(res => {
-        setHistory(res.data);
-        console.log("Fetched transfer history:", res.data);
-      })
-      .catch(err => console.error("Transfer fetch error:", err));
-  };
+  // Log assets every time they change
+  useEffect(() => {
+    console.log("RENDER STATE assets:", assets);
+  }, [assets]);
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/assets/", { withCredentials: true })
-      .then(res => setAssets(res.data))
-      .catch(err => console.error("Asset fetch error:", err));
+      .then((res) => {
+        console.log("ASSETS LOADED", res.data);
+        setAssets(res.data);
+      })
+      .catch((err) => console.error("Asset Fetch Error:", err));
 
     axios.get("http://localhost:8000/api/bases/", { withCredentials: true })
       .then(res => setBases(res.data))
-      .catch(err => console.error("Base fetch error:", err));
+      .catch(console.error);
 
     axios.get("http://localhost:8000/api/equipment-types/", { withCredentials: true })
       .then(res => setEquipmentTypes(res.data))
-      .catch(err => console.error("Type fetch error:", err));
+      .catch(console.error);
 
-    fetchTransfers();
+    axios.get("http://localhost:8000/api/transfers/", { withCredentials: true })
+      .then(res => setHistory(res.data))
+      .catch(err => console.error("Fetch Error:", err));
   }, []);
 
   useEffect(() => {
     if (fromBase && equipmentTypeId) {
-      const filtered = assets.filter(a => {
-        const baseId = typeof a.base === "object" ? a.base.id : a.base;
-        const typeId = typeof a.equipment_type === "object" ? a.equipment_type.id : a.equipment_type;
-        return String(baseId) === fromBase && String(typeId) === equipmentTypeId;
+      const filtered = assets.filter(
+        a =>
+          String(a.base) === fromBase &&
+          String(a.equipment_type) === equipmentTypeId
+      );
+
+      console.log("FILTER DEBUG", {
+        fromBase,
+        equipmentTypeId,
+        filtered,
+        allAssets: assets
       });
 
-      console.log("Filtered assets:", filtered);
       setAvailableAssets(filtered);
       setAssetId(filtered.length > 0 ? String(filtered[0].id) : "");
     } else {
@@ -59,9 +66,10 @@ const Transfer = () => {
   }, [fromBase, equipmentTypeId, assets]);
 
   const handleTransfer = () => {
+    console.log({ fromBase, toBase, assetId, date });
+
     if (!fromBase || !toBase || !assetId || !date) {
       alert("All fields are required.");
-      console.log("Missing fields:", { fromBase, toBase, assetId, date });
       return;
     }
 
@@ -73,12 +81,13 @@ const Transfer = () => {
       quantity: 1,
     };
 
-    console.log("Submitting transfer payload:", payload);
+    console.log("Sending payload:", payload);
 
-    axios.post("http://localhost:8000/api/transfers/", payload, { withCredentials: true })
+    axios
+      .post("http://localhost:8000/api/transfers/", payload, { withCredentials: true })
       .then(() => {
         alert("Transfer successful");
-        fetchTransfers();
+        setHistory([...history, payload]);
         setFromBase("");
         setToBase("");
         setEquipmentTypeId("");
@@ -87,7 +96,7 @@ const Transfer = () => {
         setAvailableAssets([]);
       })
       .catch(err => {
-        console.error("Transfer error:", err.response?.data || err.message);
+        console.error("Submit Error:", err.response?.data || err.message);
         alert("Transfer failed.");
       });
   };
@@ -96,7 +105,7 @@ const Transfer = () => {
     <div className="p-4">
       <h2 className="text-lg font-semibold mt-6 mb-2 text-gray-800">Transfer Equipment</h2>
 
-      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-5">
         <select
           value={fromBase}
           onChange={(e) => setFromBase(e.target.value)}
@@ -141,30 +150,24 @@ const Transfer = () => {
       <Button
         className="mt-4"
         onClick={handleTransfer}
-        disabled={!fromBase || !toBase || !equipmentTypeId || !date || !assetId}
+        disabled={!fromBase || !toBase || !equipmentTypeId || !assetId || !date}
       >
         Transfer
       </Button>
 
-      <h3 className="text-xl font-semibold mt-6 mb-2 text-gray-800">Transfer History</h3>
+      <h3 className="text-lg font-semibold mt-6 mb-2 text-gray-800">Transfer History</h3>
       <div className="grid gap-2">
-        {history.length === 0 ? (
-          <p className="text-gray-600">No transfers yet.</p>
-        ) : (
-          history.map((item, i) => {
-            const asset = typeof item.asset === 'object' ? item.asset : assets.find(a => a.id === item.asset);
-            const from = typeof item.from_base === 'object' ? item.from_base : bases.find(b => b.id === item.from_base);
-            const to = typeof item.to_base === 'object' ? item.to_base : bases.find(b => b.id === item.to_base);
-
-            return (
-              <Card key={i} className="p-2 bg-gray-100 text-black shadow rounded">
-                {item.date} | From: {from?.name || 'N/A'} ➡ To: {to?.name || 'N/A'} | 
-                Equipment: {equipmentTypes.find(e => e.id === asset?.equipment_type)?.name || 'Unknown'} | 
-                Asset: {asset?.name || `ID: ${item.asset}`} | Qty: {item.quantity}
-              </Card>
-            );
-          })
-        )}
+        {history.map((item, i) => {
+          const asset = assets.find(a => a.id === item.asset);
+          return (
+            <Card key={i} className="p-2 bg-gray-100 text-black shadow rounded">
+              {item.date} | From: {bases.find(b => b.id === item.from_base)?.name} ➡ 
+              To: {bases.find(b => b.id === item.to_base)?.name} | 
+              Equipment: {equipmentTypes.find(e => e.id === asset?.equipment_type)?.name || 'Unknown'} | 
+              Asset: {asset?.name || `ID: ${item.asset}`}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

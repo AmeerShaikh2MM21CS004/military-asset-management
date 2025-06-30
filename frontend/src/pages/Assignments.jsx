@@ -28,10 +28,15 @@ const Assignments = () => {
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/assets/", { withCredentials: true })
-      .then(res => setAssets(res.data));
+      .then(res => {
+        console.log("Assets loaded from backend:", res.data);
+        setAssets(res.data);
+      })
+      .catch(err => console.error("Failed to fetch assets:", err));
 
     axios.get("http://localhost:8000/api/equipment-types/", { withCredentials: true })
-      .then(res => setEquipmentTypes(res.data));
+      .then(res => setEquipmentTypes(res.data))
+      .catch(err => console.error("Failed to fetch equipment types:", err));
 
     fetchHistory();
   }, []);
@@ -51,12 +56,11 @@ const Assignments = () => {
   };
 
   const findAssetByType = (equipmentTypeId) => {
-    return assets.find(a => String(a.equipment_type) === String(equipmentTypeId));
+    return assets.find(a =>
+      String(a.equipment_type) === String(equipmentTypeId) ||
+      String(a.equipment_type?.id) === String(equipmentTypeId)
+    );
   };
-
-  const validEquipmentTypes = equipmentTypes.filter(et =>
-    assets.some(asset => String(asset.equipment_type) === String(et.id))
-  );
 
   const handleAssign = () => {
     const asset = findAssetByType(assignTypeId);
@@ -66,7 +70,7 @@ const Assignments = () => {
       personnel_name: personnel,
       asset: asset.id,
       quantity: parseInt(assignQty),
-      date: assignDate,
+      date_assigned: assignDate,
     }, { withCredentials: true })
       .then(() => {
         setDialogType("success");

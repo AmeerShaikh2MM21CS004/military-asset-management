@@ -54,6 +54,10 @@ const Assignments = () => {
     return assets.find(a => String(a.equipment_type) === String(equipmentTypeId));
   };
 
+  const validEquipmentTypes = equipmentTypes.filter(et =>
+    assets.some(asset => String(asset.equipment_type) === String(et.id))
+  );
+
   const handleAssign = () => {
     const asset = findAssetByType(assignTypeId);
     if (!asset) return alert("No asset available for this equipment type");
@@ -70,7 +74,8 @@ const Assignments = () => {
         setPersonnel(""); setAssignTypeId(""); setAssignQty(""); setAssignDate("");
         setOpen(true);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Assign error:", err.response?.data || err.message);
         setDialogType("error");
         setOpen(true);
       });
@@ -92,7 +97,8 @@ const Assignments = () => {
         setExpTypeId(""); setExpQty(""); setExpReason(""); setExpDate("");
         setOpen(true);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Expenditure error:", err.response?.data || err.message);
         setDialogType("error");
         setOpen(true);
       });
@@ -168,22 +174,31 @@ const Assignments = () => {
         <Button onClick={handleExpend}>Expend</Button>
       </div>
 
-      {/* Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          {dialogType === "success" ? (
-            <>
-              <DialogTitle>✅ Success</DialogTitle>
-              <p className="mt-2 text-gray-700">Your entry has been saved successfully.</p>
-            </>
-          ) : (
-            <>
-              <DialogTitle className="text-red-600">❌ Error</DialogTitle>
-              <p className="mt-2 text-red-600">Something went wrong. Please try again.</p>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {dialogType && (
+        <Dialog
+          open={open}
+          onOpenChange={(val) => {
+            setOpen(val);
+            if (!val) setDialogType("");
+          }}
+        >
+          <DialogContent>
+            {dialogType === "success" ? (
+              <>
+                <DialogTitle>✅ Success</DialogTitle>
+                <p className="mt-2 text-gray-700">Your entry has been saved successfully.</p>
+              </>
+            ) : (
+              <>
+                <DialogTitle className="text-red-600">❌ Error</DialogTitle>
+                <p className="mt-2 text-red-600">
+                  Something went wrong. Ensure the asset exists for this equipment type and all fields are filled correctly.
+                </p>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
 
       <hr className="my-6" />
 

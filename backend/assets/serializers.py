@@ -12,18 +12,21 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetSerializer(serializers.ModelSerializer):
+    base_name = serializers.CharField(source='base.name', read_only=True)
+    equipment_type_name = serializers.CharField(source='equipment_type.name', read_only=True)
+
     class Meta:
         model = Asset
         fields = '__all__'
 
 class TransferSerializer(serializers.ModelSerializer):
-    from_base = serializers.StringRelatedField()
-    to_base = serializers.StringRelatedField()
+    from_base = serializers.PrimaryKeyRelatedField(queryset=Base.objects.all())
+    to_base = serializers.PrimaryKeyRelatedField(queryset=Base.objects.all())
+    asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all())
 
     class Meta:
         model = Transfer
         fields = '__all__'
-
 
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:

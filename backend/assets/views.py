@@ -11,6 +11,7 @@ from rest_framework import status
 class PurchaseViewSet(viewsets.ModelViewSet):
     queryset = Purchase.objects.all() 
     serializer_class = PurchaseSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -31,26 +32,85 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 class BaseViewSet(viewsets.ModelViewSet):
     queryset = Base.objects.all()
     serializer_class = BaseSerializer
+    permission_classes = [AllowAny]
 
 class EquipmentTypeViewSet(viewsets.ModelViewSet):
     queryset = EquipmentType.objects.all()
     serializer_class = EquipmentTypeSerializer
+    permission_classes = [AllowAny]
 
 class AssetViewSet(viewsets.ModelViewSet):
-    queryset = Asset.objects.all()
+    queryset = Asset.objects.all() 
     serializer_class = AssetSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Asset.objects.filter(quantity__gt=0)
+   
+
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Transfer, Asset
+from .serializers import TransferSerializer
 
 class TransferViewSet(viewsets.ModelViewSet):
     queryset = Transfer.objects.all()
     serializer_class = TransferSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        asset_id = serializer.validated_data["asset"].id
+        from_base = serializer.validated_data["from_base"]
+        to_base = serializer.validated_data["to_base"]
+        quantity = serializer.validated_data["quantity"]
+        date = serializer.validated_data["date"]
+
+        # Get the asset at from_base
+        try:
+            from_asset = Asset.objects.get(id=asset_id, base=from_base)
+        except Asset.DoesNotExist:
+            return Response({"error": "Asset not found at from_base"}, status=400)
+
+        if from_asset.quantity < quantity:
+            return Response({"error": "Insufficient quantity at from_base"}, status=400)
+
+        from_asset.quantity -= quantity
+        from_asset.save()
+
+        # Add or create asset at to_base
+        to_asset, created = Asset.objects.get_or_create(
+            name=from_asset.name,
+            base=to_base,
+            equipment_type=from_asset.equipment_type,
+            defaults={"quantity": 0, "purchase_date": from_asset.purchase_date}
+        )
+        to_asset.quantity += quantity
+        to_asset.save()
+
+        # Save the transfer record
+        transfer = Transfer.objects.create(
+            asset=from_asset,
+            from_base=from_base,
+            to_base=to_base,
+            quantity=quantity,
+            date=date
+        )
+
+        return Response(TransferSerializer(transfer).data, status=status.HTTP_201_CREATED)
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
+    permission_classes = [AllowAny]
 
 class ExpenditureViewSet(viewsets.ModelViewSet):
     queryset = Expenditure.objects.all()
     serializer_class = ExpenditureSerializer
+    permission_classes = [AllowAny]
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

@@ -5,12 +5,11 @@ from .views import *
 router = DefaultRouter()
 router.register('bases', BaseViewSet)
 router.register('equipment-types', EquipmentTypeViewSet)
-router.register('assets', AssetViewSet)
+router.register('assets', AssetViewSet, basename='asset')
 router.register('transfers', TransferViewSet)
 router.register('assignments', AssignmentViewSet)
 router.register('expenditures', ExpenditureViewSet)
-router.register('purchases', PurchaseViewSet, basename='purchase')  
- 
+router.register('purchases', PurchaseViewSet, basename='purchase') 
 
 urlpatterns = [
     path('', include(router.urls)),

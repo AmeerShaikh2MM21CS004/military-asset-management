@@ -20,13 +20,15 @@ class AssetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TransferSerializer(serializers.ModelSerializer):
-    from_base = serializers.PrimaryKeyRelatedField(queryset=Base.objects.all())
-    to_base = serializers.PrimaryKeyRelatedField(queryset=Base.objects.all())
-    asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all())
+    from_base_name = serializers.CharField(source='from_base.name', read_only=True)
+    to_base_name = serializers.CharField(source='to_base.name', read_only=True)
+    equipment_name = serializers.CharField(source='asset.name', read_only=True)
+    equipment_type = serializers.CharField(source='asset.equipment_type.name', read_only=True)
 
     class Meta:
         model = Transfer
-        fields = '__all__'
+        fields = ['id', 'asset', 'from_base', 'to_base', 'quantity', 'date',
+                  'from_base_name', 'to_base_name', 'equipment_name', 'equipment_type']
 
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,6 +41,17 @@ class ExpenditureSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PurchaseSerializer(serializers.ModelSerializer):
+    base_name = serializers.CharField(source='base.name', read_only=True)
+    equipment_type_name = serializers.CharField(source='equipment_type.name', read_only=True)
+
     class Meta:
         model = Purchase
-        fields = '__all__'
+        fields = [
+            'id',
+            'base',                   # still allows POST with base ID
+            'equipment_type',         # still allows POST with equipment_type ID
+            'quantity',
+            'date',
+            'base_name',              # for readable display
+            'equipment_type_name'     # for readable display
+        ]

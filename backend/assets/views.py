@@ -7,27 +7,25 @@ from rest_framework.permissions import AllowAny,IsAuthenticated
 from assets.models import Purchase, Transfer
 from rest_framework import status
 
-# views.py
 class PurchaseViewSet(viewsets.ModelViewSet):
-    queryset = Purchase.objects.all() 
+    queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        base = self.request.query_params.get('base')
-        equipment_type = self.request.query_params.get('equipment_type')
-        date = self.request.query_params.get('date')
-
-        if base:
-            queryset = queryset.filter(base_id=base)
-        if equipment_type:
-            queryset = queryset.filter(equipment_type_id=equipment_type)
-        if date:
-            queryset = queryset.filter(date=date)
-
-        return queryset
-
+    def perform_create(self, serializer):
+        purchase = serializer.save()
+        # Check if asset exists for base and equipment_type
+        asset, created = Asset.objects.get_or_create(
+            base=purchase.base,
+            equipment_type=purchase.equipment_type,
+            name=f"{purchase.equipment_type.name} - {purchase.base.name}",
+            defaults={
+                'quantity': 0,
+                'purchase_date': purchase.date
+            }
+        )
+        asset.quantity += purchase.quantity
+        asset.save()
 
 class BaseViewSet(viewsets.ModelViewSet):
     queryset = Base.objects.all()
@@ -60,44 +58,39 @@ class TransferViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        asset_id = request.data.get("asset")
+        from_base = request.data.get("from_base")
+        to_base = request.data.get("to_base")
+        quantity = int(request.data.get("quantity"))
+        date = request.data.get("date")
 
-        asset_id = serializer.validated_data["asset"].id
-        from_base = serializer.validated_data["from_base"]
-        to_base = serializer.validated_data["to_base"]
-        quantity = serializer.validated_data["quantity"]
-        date = serializer.validated_data["date"]
-
-        # Get the asset at from_base
         try:
-            from_asset = Asset.objects.get(id=asset_id, base=from_base)
+         asset = Asset.objects.get(id=asset_id, base_id=from_base)
         except Asset.DoesNotExist:
-            return Response({"error": "Asset not found at from_base"}, status=400)
+         return Response({"error": "Asset not found at from_base"}, status=400)
 
-        if from_asset.quantity < quantity:
+        if asset.quantity < quantity:
             return Response({"error": "Insufficient quantity at from_base"}, status=400)
 
-        from_asset.quantity -= quantity
-        from_asset.save()
+        asset.quantity -= quantity
+        asset.save()
 
-        # Add or create asset at to_base
-        to_asset, created = Asset.objects.get_or_create(
-            name=from_asset.name,
-            base=to_base,
-            equipment_type=from_asset.equipment_type,
-            defaults={"quantity": 0, "purchase_date": from_asset.purchase_date}
+    # Create or update asset at to_base
+        to_asset, _ = Asset.objects.get_or_create(
+          name=asset.name,
+          base_id=to_base,
+          equipment_type=asset.equipment_type,
+          defaults={"quantity": 0, "purchase_date": asset.purchase_date}
         )
         to_asset.quantity += quantity
         to_asset.save()
 
-        # Save the transfer record
         transfer = Transfer.objects.create(
-            asset=from_asset,
-            from_base=from_base,
-            to_base=to_base,
-            quantity=quantity,
-            date=date
+         asset=asset,
+         from_base_id=from_base,
+         to_base_id=to_base,
+         quantity=quantity,
+         date=date
         )
 
         return Response(TransferSerializer(transfer).data, status=status.HTTP_201_CREATED)

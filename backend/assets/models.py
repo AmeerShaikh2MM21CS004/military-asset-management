@@ -37,5 +37,5 @@ class Expenditure(models.Model):
 class Purchase(models.Model):
     base = models.ForeignKey(Base, on_delete=models.CASCADE)
     equipment_type = models.ForeignKey(EquipmentType, on_delete=models.CASCADE)
-    date = models.DateField()
     quantity = models.PositiveIntegerField()
+    date = models.DateField(auto_now_add=True)

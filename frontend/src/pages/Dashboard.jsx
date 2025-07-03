@@ -16,22 +16,27 @@ const Dashboard = () => {
   const [equipmentTypes, setEquipmentTypes] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/bases/", { withCredentials: true })
+    axios
+      .get("http://localhost:8000/api/bases/", { withCredentials: true })
       .then((res) => setBases(res.data))
       .catch(console.error);
 
-    axios.get("http://localhost:8000/api/equipment-types/", { withCredentials: true })
+    axios
+      .get("http://localhost:8000/api/equipment-types/", {
+        withCredentials: true,
+      })
       .then((res) => setEquipmentTypes(res.data))
       .catch(console.error);
   }, []);
 
   const fetchMetrics = () => {
-    axios.get("http://localhost:8000/api/dashboard/", {
-      params: filters,
-      withCredentials: true,
-    })
-    .then((res) => setMetrics(res.data))
-    .catch((err) => console.error("Dashboard fetch error:", err));
+    axios
+      .get("http://localhost:8000/api/dashboard-metrics/", {
+        params: filters,
+        withCredentials: true,
+      })
+      .then((res) => setMetrics(res.data))
+      .catch((err) => console.error("Dashboard fetch error:", err));
   };
 
   useEffect(() => {
@@ -39,15 +44,16 @@ const Dashboard = () => {
   }, []);
 
   const fetchMovementDetails = () => {
-    axios.get("http://localhost:8000/api/net-movement-details/", {
-      params: { base: filters.base || undefined },
-      withCredentials: true,
-    })
-    .then((res) => {
-      setMovementDetails(res.data);
-      setDetailsOpen(true);
-    })
-    .catch((err) => console.error("Movement details fetch error:", err));
+    axios
+      .get("http://localhost:8000/api/net-movement-details/", {
+        params: { base: filters.base || undefined },
+        withCredentials: true,
+      })
+      .then((res) => {
+        setMovementDetails(res.data);
+        setDetailsOpen(true);
+      })
+      .catch((err) => console.error("Movement details fetch error:", err));
   };
 
   const data = metrics || {
@@ -66,35 +72,49 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-10">
       <div className="max-w-screen-2xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+          Dashboard Overview
+        </h1>
 
         <div className="bg-white p-6 rounded-xl shadow-md mb-10">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Filter Metrics</h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Filter Metrics
+          </h3>
           <div className="flex flex-wrap gap-4 items-center">
             <input
               type="date"
               value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, date: e.target.value })
+              }
               className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             />
             <select
               value={filters.base}
-              onChange={(e) => setFilters({ ...filters, base: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, base: e.target.value })
+              }
               className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             >
               <option value="">Select Base</option>
               {bases.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
               ))}
             </select>
             <select
               value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, type: e.target.value })
+              }
               className="border border-gray-300 rounded px-4 py-2 bg-white text-black w-full sm:w-auto"
             >
               <option value="">Select Equipment Type</option>
               {equipmentTypes.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
             <button
@@ -111,12 +131,14 @@ const Dashboard = () => {
             "Opening Balance": data.opening_balance,
             "Closing Balance": data.closing_balance,
             "Net Movement": data.net_movement,
-            "Assigned": data.assigned,
-            "Expended": data.expended,
+            Assigned: data.assigned,
+            Expended: data.expended,
           }).map(([label, value]) => (
             <div
               key={label}
-              onClick={() => label === "Net Movement" && fetchMovementDetails()}
+              onClick={() =>
+                label === "Net Movement" && fetchMovementDetails()
+              }
               className="bg-white p-6 rounded-xl shadow hover:shadow-lg cursor-pointer transition"
             >
               <h2 className="text-lg font-medium text-gray-600">{label}</h2>
@@ -133,26 +155,41 @@ const Dashboard = () => {
           {movementDetails ? (
             <>
               <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2 text-blue-700">Purchases</h3>
+                <h3 className="text-lg font-semibold mb-2 text-blue-700">
+                  Purchases
+                </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                   {movementDetails.purchases.map((p, i) => (
-                    <li key={i}>{p.date} - {p.base} - {p.equipmentType} - Qty: {p.quantity}</li>
+                    <li key={i}>
+                      {p.date} – Base: {p.base} – Equipment: {p.equipmentType} – Qty:{" "}
+                      {p.quantity}
+                    </li>
                   ))}
                 </ul>
               </div>
               <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2 text-green-700">Transfer In</h3>
+                <h3 className="text-lg font-semibold mb-2 text-green-700">
+                  Transfer In
+                </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                   {movementDetails.transfer_in.map((t, i) => (
-                    <li key={i}>{t.date} - From: {t.from_base} - Qty: {t.quantity}</li>
+                    <li key={i}>
+                      {t.date} – From: {t.from_base} – Equipment:{" "}
+                      {t.equipment_name} ({t.equipment_type}) – Qty: {t.quantity}
+                    </li>
                   ))}
                 </ul>
               </div>
               <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2 text-red-700">Transfer Out</h3>
+                <h3 className="text-lg font-semibold mb-2 text-red-700">
+                  Transfer Out
+                </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                   {movementDetails.transfer_out.map((t, i) => (
-                    <li key={i}>{t.date} - To: {t.to_base} - Qty: {t.quantity}</li>
+                    <li key={i}>
+                      {t.date} – To: {t.to_base} – Equipment: {t.equipment_name} (
+                      {t.equipment_type}) – Qty: {t.quantity}
+                    </li>
                   ))}
                 </ul>
               </div>

@@ -17,6 +17,7 @@ A full-stack web application to manage and track military assets (vehicles, weap
 ---
 
 ## 📂 Project Structure
+```
 
 military-asset-management/
 ├── backend/                        # Django backend

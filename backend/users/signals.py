@@ -9,7 +9,7 @@ User = get_user_model()
 @receiver(post_migrate)
 def create_default_users(sender, **kwargs):
     if User.objects.filter(username="admin").exists():
-        return  # Already created
+        return  
 
     default_base = Base.objects.first() or Base.objects.create(name="Default Base")
 

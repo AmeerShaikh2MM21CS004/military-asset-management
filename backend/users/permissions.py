@@ -12,7 +12,6 @@ class IsLogisticsOfficer(BasePermission):
     def has_permission(self, request, view):
         return request.user.role == 'officer'
 
-# assets/permissions.py
 from rest_framework.permissions import BasePermission
 
 class IsAdminOrCommanderOrOfficer(BasePermission):
@@ -23,7 +22,6 @@ class IsAdminOrCommanderOrOfficer(BasePermission):
         role = request.user.role
         if role == 'admin': return True
         if role == 'commander':
-            # limit creates/views appropriately
             return getattr(obj, 'base', None) == request.user.base
         if role == 'officer':
             return view.basename in ('purchases', 'transfers') and request.method in ('GET','POST')

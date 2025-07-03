@@ -48,10 +48,10 @@ class PurchaseSerializer(serializers.ModelSerializer):
         model = Purchase
         fields = [
             'id',
-            'base',                   # still allows POST with base ID
-            'equipment_type',         # still allows POST with equipment_type ID
+            'base',                   
+            'equipment_type',         
             'quantity',
             'date',
-            'base_name',              # for readable display
-            'equipment_type_name'     # for readable display
+            'base_name',              
+            'equipment_type_name'     
         ]
